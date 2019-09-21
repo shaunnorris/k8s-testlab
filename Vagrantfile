@@ -19,10 +19,10 @@ Vagrant.configure("2") do |config|
       worker.vm.hostname = name
       worker.vm.network :private_network, ip: "10.0.0.#{i + 11}"
       worker.vm.provision :shell, privileged: false, inline: <<-SHELL
-#sudo /vagrant/join.sh
-#echo 'Environment="KUBELET_EXTRA_ARGS=--node-ip=10.0.0.#{i + 11}"' | sudo tee -a /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-#sudo systemctl daemon-reload
-#sudo systemctl restart kubelet
+sudo /vagrant/join.sh
+echo 'Environment="KUBELET_EXTRA_ARGS=--node-ip=10.0.0.#{i + 11}"' | sudo tee -a /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
 SHELL
     end
   end
@@ -45,14 +45,15 @@ sed -i '/swap/d' /etc/fstab
 
 # Install kubeadm, kubectl and kubelet
 export DEBIAN_FRONTEND=noninteractive
-apt-get  install ebtables ethtool
-apt-get  update
-apt-get  install -y docker.io apt-transport-https curl
+apt-get  install -y ebtables ethtool
+apt-get  update -y
+/vagrant/install_docker.sh
+apt-get  install -y  apt-transport-https curl
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
-apt-get  update
+apt-get  update -y
 apt-get  install -y kubelet kubeadm kubectl
 SCRIPT
 
@@ -61,24 +62,28 @@ OUTPUT_FILE=/vagrant/join.sh
 rm -rf $OUTPUT_FILE
 
 # Start cluster
-#sudo kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16 | grep "kubeadm join" > ${OUTPUT_FILE}
-#chmod +x $OUTPUT_FILE
+sudo kubeadm init --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16 | grep -A 2 "kubeadm join" > ${OUTPUT_FILE}
+chmod +x $OUTPUT_FILE
 
 # Configure kubectl
-#mkdir -p $HOME/.kube
-#sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-#sudo chown $(id -u):$(id -g) $HOME/.kube/config
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Fix kubelet IP
-#echo 'Environment="KUBELET_EXTRA_ARGS=--node-ip=10.0.0.10"' | sudo tee -a /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+echo 'Environment="KUBELET_EXTRA_ARGS=--node-ip=10.0.0.10"' | sudo tee -a /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+
+# Configure Calico 
+kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
 
 # Configure flannel
 #curl -o kube-flannel.yml https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml
 #sed -i.bak 's|"/opt/bin/flanneld",|"/opt/bin/flanneld", "--iface=enp0s8",|' kube-flannel.yml
 #kubectl create -f kube-flannel.yml
 
-#sudo systemctl daemon-reload
-#sudo systemctl restart kubelet
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
 SHELL
 
 $install_multicast = <<-SHELL
