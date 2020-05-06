@@ -1,9 +1,9 @@
 # k8s-testlab  
-Vagrant files and other goodness for bringing up a k8s test lab  
+Kubernetes test lab setup 
 
 Usage:  
-Install virtualbox  
-Install vagrant  
-symlink the Vagrantfile and install_docker.sh files into your home directory  
-$ vagrant up  
+install multipass
+clone github repo
+
+run ./kubeadm-cluster.sh
 
