@@ -3,7 +3,6 @@
 #initial VM setup
 
 #TODO LIST
-# get number of nodes from command line
 # get cpu / ran / disk size for primary from command line with sensible defaults
 # get cpu / ram / disk size for nodes from command line with sensible defaults
 # check if nodes with same name as what will be built already exist and quit with a warning
@@ -25,6 +24,19 @@ while [[ "$CLUSTERNAME" =~ [^a-zA-Z] ]] ; do
   read -p "Please enter a name for your cluster:" CLUSTERNAME
 done
 echo "We will proceed with $CLUSTERNAME to identify VMs brought up with this script" 
+
+# get number of nodes from command line
+read -p "Please enter number of worker nodes(1-9):" CLUSTERNODES
+while  ! (($CLUSTERNODES > 0 && $CLUSTERNODES < 10)) ; do
+  echo "please enter a number betweeen 1-9"
+  read -p "Please enter number of worker nodes(1-9):" CLUSTERNODES
+done
+echo "We will build $CLUSTERNODES worker nodes in the $CLUSTERNAME cluster."
+echo "  along with 1 primary control plane vm"
+echo "  (This script currently does not build HA control plane clusters) "
+echo "==========="
+
+
 
 exit
 SHAREPATH="$PWD/multipass"
