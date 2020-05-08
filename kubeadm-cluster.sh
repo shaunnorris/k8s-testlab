@@ -3,8 +3,6 @@
 #initial VM setup
 
 #TODO LIST
-# check if multipass installed
-# get a unique cluster name from command line entry
 # get number of nodes from command line
 # get cpu / ran / disk size for primary from command line with sensible defaults
 # get cpu / ram / disk size for nodes from command line with sensible defaults
@@ -15,11 +13,20 @@
 # install KOV and setup to use LB
 # add a delete option to specifiy a cluster name and delete all multipass nodes including that name, and delete them
 
+# check if multipass installed and quit if not
+command -v multipass >/dev/null 2>&1 || { echo >&2 "Please install multipass on your system before proceeding. https://multipass.run"; exit 1; }
+MPASS=`command -v multipass`
+echo "We will use $MPASS to run this script. Proceeding..." 
 
+# get a unique cluster name from command line entry
+read -p "Please enter a name for your cluster:" CLUSTERNAME
+while [[ "$CLUSTERNAME" =~ [^a-zA-Z] ]] ; do
+  echo "invalid cluster Name - please use alpha chars only"
+  read -p "Please enter a name for your cluster:" CLUSTERNAME
+done
+echo "We will proceed with $CLUSTERNAME to identify VMs brought up with this script" 
 
-
-
-
+exit
 SHAREPATH="$PWD/multipass"
 
 
